@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Vella — Ingresar</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    background: #111;
+    color: #eee;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .card {
+    background: #1a1a1a;
+    border-radius: 16px;
+    padding: 30px;
+    width: 100%;
+    max-width: 380px;
+    border: 1px solid #333;
+  }
+  .logo {
+    text-align: center;
+    font-size: 28px;
+    font-weight: 800;
+    color: #fff;
+    margin-bottom: 4px;
+  }
+  .logo span { color: #d4537e; }
+  .subtitle {
+    text-align: center;
+    color: #999;
+    font-size: 13px;
+    margin-bottom: 24px;
+  }
+  .tabs {
+    display: flex;
+    background: #222;
+    border-radius: 10px;
+    padding: 4px;
+    margin-bottom: 20px;
+  }
+  .tab {
+    flex: 1;
+    text-align: center;
+    padding: 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    color: #999;
+    font-weight: 600;
+    font-size: 14px;
+  }
+  .tab.active {
+    background: #7C2D46;
+    color: #fff;
+  }
+  label {
+    display: block;
+    font-size: 13px;
+    color: #bbb;
+    margin: 14px 0 6px;
+  }
+  input, select {
+    width: 100%;
+    padding: 12px;
+    border-radius: 8px;
+    border: 1px solid #444;
+    background: #222;
+    color: #fff;
+    font-size: 14px;
+  }
+  .gender-options {
+    display: flex;
+    gap: 10px;
+  }
+  .gender-btn {
+    flex: 1;
+    padding: 12px;
+    border-radius: 8px;
+    border: 1px solid #444;
+    background: #222;
+    color: #ccc;
+    text-align: center;
+    cursor: pointer;
+    font-size: 14px;
+  }
+  .gender-btn.selected {
+    border-color: #d4537e;
+    background: #3a2029;
+    color: #fff;
+  }
+  button.primary {
+    width: 100%;
+    padding: 14px;
+    margin-top: 22px;
+    border: none;
+    border-radius: 10px;
+    background: #7C2D46;
+    color: #fff;
+    font-weight: 700;
+    font-size: 15px;
+    cursor: pointer;
+  }
+  button.primary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  button.google {
+    width: 100%;
+    padding: 12px;
+    margin-top: 10px;
+    border: 1px solid #444;
+    border-radius: 10px;
+    background: #fff;
+    color: #333;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+  }
+  .msg {
+    margin-top: 14px;
+    font-size: 13px;
+    text-align: center;
+    min-height: 18px;
+  }
+  .msg.error { color: #f28b8b; }
+  .msg.ok { color: #8bf2a8; }
+  .hidden { display: none !important; }
+  .session-box { text-align: center; }
+  .session-box p { color: #ccc; font-size: 14px; }
+</style>
+</head>
+<body>
+
+<div class="card">
+  <div class="logo">Ve<span>lla</span></div>
+  <div class="subtitle">Conoce personas por videollamada</div>
+
+  <!-- ESTADO: sesión ya iniciada -->
+  <div id="sessionBox" class="session-box hidden">
+    <p id="welcomeMsg"></p>
+    <button class="primary" onclick="cerrarSesion()">Cerrar sesión</button>
+  </div>
+
+  <!-- ESTADO: formulario de login/registro -->
+  <div id="authBox">
+    <div class="tabs">
+      <div class="tab active" id="tabLogin" onclick="mostrarTab('login')">Iniciar sesión</div>
+      <div class="tab" id="tabRegistro" onclick="mostrarTab('registro')">Registrarme</div>
+    </div>
+
+    <!-- LOGIN -->
+    <div id="formLogin">
+      <label>Correo</label>
+      <input type="email" id="loginEmail" placeholder="tucorreo@ejemplo.com" />
+      <label>Contraseña</label>
+      <input type="password" id="loginPassword" placeholder="••••••••" />
+      <button class="primary" onclick="iniciarSesion()">Iniciar sesión</button>
+      <button class="google" onclick="entrarConGoogle()">Continuar con Google</button>
+    </div>
+
+    <!-- REGISTRO -->
+    <div id="formRegistro" class="hidden">
+      <label>Nombre</label>
+      <input type="text" id="regNombre" placeholder="Tu nombre" />
+
+      <label>Género (no se puede cambiar después)</label>
+      <div class="gender-options">
+        <div class="gender-btn" id="btnMasculino" onclick="elegirGenero('masculino')">Masculino</div>
+        <div class="gender-btn" id="btnFemenino" onclick="elegirGenero('femenino')">Femenino</div>
+      </div>
+
+      <label>Fecha de nacimiento</label>
+      <input type="date" id="regFecha" />
+
+      <label>Correo</label>
+      <input type="email" id="regEmail" placeholder="tucorreo@ejemplo.com" />
+
+      <label>Contraseña</label>
+      <input type="password" id="regPassword" placeholder="Mínimo 6 caracteres" />
+
+      <button class="primary" onclick="registrarse()">Crear cuenta</button>
+      <button class="google" onclick="entrarConGoogle()">Continuar con Google</button>
+    </div>
+
+    <div id="msg" class="msg"></div>
+  </div>
+</div>
+
+<script>
+  // ---- Configuración de Supabase ----
+  const SUPABASE_URL = "https://yfvnifvwixvkfapprczp.supabase.co";
+  const SUPABASE_KEY = "sb_publishable_YXW7x-9pGV6eRUzUCMBoaw_fGbRvkRr";
+  const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  let generoSeleccionado = null;
+
+  function mostrarTab(tab) {
+    document.getElementById("tabLogin").classList.toggle("active", tab === "login");
+    document.getElementById("tabRegistro").classList.toggle("active", tab === "registro");
+    document.getElementById("formLogin").classList.toggle("hidden", tab !== "login");
+    document.getElementById("formRegistro").classList.toggle("hidden", tab !== "registro");
+    document.getElementById("msg").textContent = "";
+  }
+
+  function elegirGenero(g) {
+    generoSeleccionado = g;
+    document.getElementById("btnMasculino").classList.toggle("selected", g === "masculino");
+    document.getElementById("btnFemenino").classList.toggle("selected", g === "femenino");
+  }
+
+  function mostrarMensaje(texto, tipo) {
+    const el = document.getElementById("msg");
+    el.textContent = texto;
+    el.className = "msg " + (tipo || "");
+  }
+
+  function calcularEdad(fechaStr) {
+    const hoy = new Date();
+    const nacimiento = new Date(fechaStr);
+    let edad = hoy.getFullYear() - nacimiento.getFullYear();
+    const m = hoy.getMonth() - nacimiento.getMonth();
+    if (m < 0 || (m === 0 && hoy.getDate() < nacimiento.getDate())) {
+      edad--;
+    }
+    return edad;
+  }
+
+  async function registrarse() {
+    const nombre = document.getElementById("regNombre").value.trim();
+    const fecha = document.getElementById("regFecha").value;
+    const email = document.getElementById("regEmail").value.trim();
+    const password = document.getElementById("regPassword").value;
+
+    if (!nombre || !generoSeleccionado || !fecha || !email || !password) {
+      mostrarMensaje("Completa todos los campos.", "error");
+      return;
+    }
+    if (calcularEdad(fecha) < 18) {
+      mostrarMensaje("Debes ser mayor de 18 años para registrarte.", "error");
+      return;
+    }
+    if (password.length < 6) {
+      mostrarMensaje("La contraseña debe tener al menos 6 caracteres.", "error");
+      return;
+    }
+
+    mostrarMensaje("Creando tu cuenta...", "");
+
+    const { data, error } = await supabase.auth.signUp({
+      email: email,
+      password: password,
+      options: {
+        data: {
+          name: nombre,
+          gender: generoSeleccionado,
+          birth_date: fecha
+        }
+      }
+    });
+
+    if (error) {
+      mostrarMensaje(error.message, "error");
+      return;
+    }
+
+    mostrarMensaje("¡Cuenta creada! Revisa tu sesión.", "ok");
+    revisarSesion();
+  }
+
+  async function iniciarSesion() {
+    const email = document.getElementById("loginEmail").value.trim();
+    const password = document.getElementById("loginPassword").value;
+
+    if (!email || !password) {
+      mostrarMensaje("Ingresa tu correo y contraseña.", "error");
+      return;
+    }
+
+    mostrarMensaje("Ingresando...", "");
+
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+
+    if (error) {
+      mostrarMensaje("Correo o contraseña incorrectos.", "error");
+      return;
+    }
+
+    revisarSesion();
+  }
+
+  async function entrarConGoogle() {
+    mostrarMensaje("El login con Google aún no está activado — lo configuramos en el siguiente paso.", "error");
+  }
+
+  async function cerrarSesion() {
+    await supabase.auth.signOut();
+    revisarSesion();
+  }
+
+  async function revisarSesion() {
+    const { data: { session } } = await supabase.auth.getSession();
+
+    if (session) {
+      // Traemos el perfil para mostrar el nombre real
+      const { data: perfil } = await supabase
+        .from("profiles")
+        .select("name, gender")
+        .eq("id", session.user.id)
+        .single();
+
+      document.getElementById("authBox").classList.add("hidden");
+      document.getElementById("sessionBox").classList.remove("hidden");
+      document.getElementById("welcomeMsg").textContent =
+        "Sesión iniciada como " + (perfil ? perfil.name : session.user.email) +
+        " (" + (perfil ? perfil.gender : "") + ")";
+    } else {
+      document.getElementById("authBox").classList.remove("hidden");
+      document.getElementById("sessionBox").classList.add("hidden");
+    }
+  }
+
+  // Al cargar la página, revisamos si ya hay sesión activa
+  revisarSesion();
+</script>
+
+</body>
+</html>
